@@ -1,11 +1,14 @@
 import flet as ft
-
+import heapq
+import random
+import time
 
 ########################################################--Board Class--########################################################
 class Board:
     def __init__(self, N):
         self.N = N
         self.board = [[0] * N for _ in range(N)]
+        self.timing=time.time()
 
     def is_safe(self, row, col):
         for i in range(col):
@@ -23,12 +26,9 @@ class Board:
         return True
 
     def print_board(self):
-        board=""
-        for i in range(self.N):
-            for j in range(self.N):
-                board+=str(self.board[i][j])+" "
-            board+="\n"
-        return board
+        if self.board==[[0] * self.N for _ in range(self.N)]:
+            return "No Solution Found",time.time()-self.timing
+        return self.board,time.time()-self.timing
 
     def place_queen(self, row, col):
         self.board[row][col] = 1
@@ -57,28 +57,63 @@ def backtrack(board, col):
 ###############################################################################################################################
 
 
+################################################--Best-First Search Algorithm--################################################
+
+
+def heuristicBF(state, n):
+    conflicts = 0
+    for i in range(n):
+        for j in range(i + 1, n):
+            if state[i] == state[j] or abs(state[i] - state[j]) == abs(i - j):
+                conflicts += 1
+    return conflicts
+
+
+def best_first(board):
+    n = board.N
+    start = [random.randint(0, n - 1) for _ in range(n)]
+    pq = [(heuristicBF(start, n), start)]
+    visited = set()
+
+    while pq:
+        h, state = heapq.heappop(pq)
+
+        if h == 0:
+            for col in range(n):
+                board.place_queen(state[col], col)
+            return True
+        visited.add(tuple(state))
+        for i in range(n):
+            for j in range(n):
+                if j != state[i]:
+                    new_state = state.copy()
+                    new_state[i] = j
+                    if tuple(new_state) not in visited:
+                        heapq.heappush(pq, (heuristicBF(new_state, n), new_state))
+    return False
+###############################################################################################################################
+
+
+
 def solve(N,C):
     board = Board(N)
     match C:
         case 1:
-            if not backtrack(board, 0):
-                return("No Solution")
+            backtrack(board, 0)
         case 2:
-            # if not best_First(board, 0):
-            #     print("error")
-            return("Not implemented yet..")
+            best_first(board)
         case 3:
             # if not hill_Climbing(board, 0):
             #     print("error")
-            return("Not implemented yet..")
+            return("Not implemented yet..") ,0
         case 4:
             # if not cultural(board, 0):
             #     print("error")
-            return("Not implemented yet..")
+            return("Not implemented yet.."),0
         case _:
-            return("No Such Search Algorithm")
+            return("No Such Search Algorithm"),0
     # return print_board(board)
-    return board.board
+    return board.print_board()
 
 
 
@@ -95,35 +130,48 @@ def main(page: ft.Page):
         title = ft.Text(value="N-Queens", color="green", size=30, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
         center_title=True
         )
+    page.window.width = 600
+    page.window.height = 700
+    page.auto_scroll = True
+    page.scroll= "ALWAYS"
     
     
 
     def button_clicked(e):
-        result = solve(int(Ntiles.value), int(color_dropdown.value))
+        result, timing = solve(int(Ntiles.value), int(color_dropdown.value))
         if isinstance(result, list):
             
 
             columns = [ft.DataColumn(ft.Text("")) for _ in range(int(Ntiles.value))]
             rows = []
             for row_data in result:
-                cells = [ft.DataCell(ft.Text(str(cell))) for cell in row_data]
+                cells = []
+                for cell in row_data:
+                    if cell == 1:
+                        cells.append(ft.DataCell(ft.Icon(name=ft.Icons.PERSON_4_SHARP, color=ft.Colors.GREEN)))
+                    else:
+                        cells.append(ft.DataCell(ft.Text(str(" "))))
                 rows.append(ft.DataRow(cells=cells))
 
-            table = ft.DataTable(columns=columns, rows=rows, border=ft.border.all(1, ft.Colors.BLACK), heading_row_height=0)
+            table = ft.DataTable(columns=columns, rows=rows, border=ft.border.all(3, ft.Colors.WHITE), border_radius=10,
+            heading_row_height=0,vertical_lines=ft.border.BorderSide(3, ft.Colors.WHITE),
+            horizontal_lines=ft.border.BorderSide(3, ft.Colors.WHITE),)
             output_container.content = table
         else:
             output_text.value = result
             output_container.content = output_text
+        output_time.value = f"Time taken: {timing:.6f} seconds"
         page.update()
     
     output_text = ft.Text()
-    output_container = ft.Container(content=output_text, height=400, alignment=ft.alignment.center)
+    output_time = ft.Text()
+    output_container = ft.Container(content=output_text, alignment=ft.alignment.center,)
     submit_btn = ft.ElevatedButton(text="Solve", on_click=button_clicked, bgcolor=ft.Colors.GREEN, color=ft.Colors.WHITE)
     color_dropdown = ft.Dropdown(
         text_align=ft.TextAlign.CENTER,
         hint_text="Select Search Algorithm",
         options=[
-            ft.dropdown.Option(1,"Backtracking Search Algorithm"),
+            ft.dropdown.Option(1,"Backtracking Search"),
             ft.dropdown.Option(2,"Best-First Search"),
             ft.dropdown.Option(3,"Hill-Climbing Search"),
             ft.dropdown.Option(4,"Cultural Algorithm"),
@@ -139,7 +187,8 @@ def main(page: ft.Page):
                         Ntiles,
                         color_dropdown,
                         submit_btn,
-                        output_container
+                        output_container,
+                        output_time
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER
@@ -147,10 +196,11 @@ def main(page: ft.Page):
             ),
             expand=True,
             alignment=ft.alignment.center,
-            padding=ft.padding.only(top=-50)
+            # padding=ft.padding.only(top=-48)
         ),
 
     )
+    
 
 
 
