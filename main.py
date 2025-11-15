@@ -38,6 +38,9 @@ class Board:
 ###############################################################################################################################
 
 
+
+###########################################################################--Algorithms--###########################################################################
+
 ###############################################--Backtracking Search Algorithm--###############################################
 
 def backtrack(board, col):
@@ -94,26 +97,6 @@ def best_first(board):
 ###############################################################################################################################
 
 
-
-def solve(N,C):
-    board = Board(N)
-    match C:
-        case 1:
-            backtrack(board, 0)
-        case 2:
-            best_first(board)
-        case 3:
-            # if not hill_Climbing(board, 0):
-            #     print("error")
-            return("Not implemented yet..") ,0
-        case 4:
-            # if not cultural(board, 0):
-            #     print("error")
-            return("Not implemented yet.."),0
-        case _:
-            return("No Such Search Algorithm"),0
-    # return print_board(board)
-    return board.print_board()
 
 
 
@@ -208,6 +191,26 @@ def main(page: ft.Page):
 
 ###########################################################--Main--############################################################
 ft.app(main)
+def solve(N,C):
+    board = Board(N)
+    match C:
+        case 1:
+            backtrack(board, 0)
+        case 2:
+            best_first(board)
+        case 3:
+            # if not hill_Climbing(board, 0):
+            #     print("error")
+            return("Not implemented yet..") ,0
+        case 4:
+            # if not cultural(board, 0):
+            #     print("error")
+            return("Not implemented yet.."),0
+        case _:
+            return("No Such Search Algorithm"),0
+    # return print_board(board)
+    return board.print_board()
+
 
 # N = int(input("\nEnter N\n"))
 # C =int(input("Choose Search Algorithm Number:\n1.Backtracking Search Algorithm\n2.Best-First Search\n3.Hill-Climbing Search\n4.Cultural Algorithm\n"))
