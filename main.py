@@ -63,7 +63,7 @@ def backtrack(board, col):
 ################################################--Best-First Search Algorithm--################################################
 
 
-def heuristicBF(state, n):
+def heuristicBF1(state, n):
     conflicts = 0
     for i in range(n):
         for j in range(i + 1, n):
@@ -71,11 +71,31 @@ def heuristicBF(state, n):
                 conflicts += 1
     return conflicts
 
+def heuristicBF2(state, n):
+    row = [0] * n
+    d1 = [0] * (2*n)
+    d2 = [0] * (2*n)
+
+    for c in range(n):
+        r = state[c]
+        row[r] += 1
+        d1[c + r] += 1
+        d2[c - r + n] += 1
+
+    conflicts = 0
+    for c in range(n):
+        r = state[c]
+        conflicts += (row[r] - 1)
+        conflicts += (d1[c + r] - 1)
+        conflicts += (d2[c - r + n] - 1)
+
+    return conflicts
+
 
 def best_first(board):
     n = board.N
     start = [random.randint(0, n - 1) for _ in range(n)]
-    pq = [(heuristicBF(start, n), start)]
+    pq = [(heuristicBF1(start, n), start)]
     visited = set()
 
     while pq:
@@ -92,7 +112,7 @@ def best_first(board):
                     new_state = state.copy()
                     new_state[i] = j
                     if tuple(new_state) not in visited:
-                        heapq.heappush(pq, (heuristicBF(new_state, n), new_state))
+                        heapq.heappush(pq, (heuristicBF1(new_state, n), new_state))
     return False
 ###############################################################################################################################
 
