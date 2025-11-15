@@ -138,16 +138,11 @@ def main(page: ft.Page):
     page.auto_scroll = True
     page.scroll= "ALWAYS"
     
-    
 
-    def button_clicked(e):
-        result, timing = solve(int(Ntiles.value), int(color_dropdown.value))
-        if isinstance(result, list):
-            
-
-            columns = [ft.DataColumn(ft.Text("")) for _ in range(int(Ntiles.value))]
-            rows = []
-            for row_data in result:
+    def show_table(result):
+        columns = [ft.DataColumn(ft.Text("")) for _ in range(int(Ntiles.value))]
+        rows = []
+        for row_data in result:
                 cells = []
                 for cell in row_data:
                     if cell == 1:
@@ -156,15 +151,88 @@ def main(page: ft.Page):
                         cells.append(ft.DataCell(ft.Text(str(" "))))
                 rows.append(ft.DataRow(cells=cells))
 
-            table = ft.DataTable(columns=columns, rows=rows, border=ft.border.all(3, ft.Colors.WHITE), border_radius=10,
+        table = ft.DataTable(columns=columns, rows=rows, border=ft.border.all(3, ft.Colors.WHITE), border_radius=10,
             heading_row_height=0,vertical_lines=ft.border.BorderSide(3, ft.Colors.WHITE),
             horizontal_lines=ft.border.BorderSide(3, ft.Colors.WHITE),)
-            output_container.content = table
+        return table
+
+
+
+    def button_clicked(e):
+        result, timing = solve(int(Ntiles.value), int(color_dropdown.value))
+        if isinstance(result, list):
+            
+
+            
+            output_container.content = show_table(result)
         else:
             output_text.value = result
             output_container.content = output_text
         output_time.value = f"Time taken: {timing:.6f} seconds"
         page.update()
+
+    def all_Clicked(e):
+
+        open_new(Ntiles.value,1)
+        page.update()
+
+
+    
+
+    def open_new(n,algo):
+        result, timing = solve(int(n), algo)
+
+        x=""
+        match algo:
+            case 1: x="Backtracking Search"
+            case 2: x="Best-First Search"
+            case 3: x="Hill-Climbing Search"
+            case 4: x="Cultural Algorithm"
+
+        if isinstance(result, list):
+            table = show_table(result)
+            content=ft.Column(
+                    [
+                        ft.Text(value=x, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
+                        table,
+                        ft.Text(f"Time taken: {timing:.6f} seconds")
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER
+                )
+            
+        else:
+            content=ft.Column(
+                    [
+                        ft.Text(value=x, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
+                        ft.Text(result),
+                        ft.Text(f"Time taken: {timing:.6f} seconds")
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER
+                )
+
+
+
+
+        new_page=ft.AlertDialog(
+        modal=True,
+        title = "N-Queens Solution",
+        content=content,
+        alignment=ft.alignment.center,
+        actions=[],
+        actions_alignment=ft.MainAxisAlignment.END,
+        )
+        def next(e):
+            page.close(new_page)
+            if algo<4:
+                open_new(n, algo+1)
+        
+        new_page.actions=[ft.ElevatedButton("Next", on_click=next, bgcolor=ft.Colors.GREEN, color=ft.Colors.WHITE)]
+
+        page.open(new_page)
+            
+
     
     output_text = ft.Text()
     output_time = ft.Text()
@@ -182,12 +250,14 @@ def main(page: ft.Page):
     )
 
     Ntiles = ft.TextField(hint_text="Enter Number of tiles", width=200, text_align=ft.TextAlign.CENTER, keyboard_type=ft.KeyboardType.NUMBER)
+    all_btn = ft.ElevatedButton(text="All?", on_click=all_Clicked, bgcolor=ft.Colors.GREEN, color=ft.Colors.WHITE)
+
     page.add(
         ft.Container(
             content=ft.SafeArea(
                 ft.Column(
                     [
-                        Ntiles,
+                       ft.Row([Ntiles, all_btn], alignment=ft.MainAxisAlignment.CENTER ),
                         color_dropdown,
                         submit_btn,
                         output_container,
@@ -210,7 +280,7 @@ def main(page: ft.Page):
 ###############################################################################################################################
 
 ###########################################################--Main--############################################################
-ft.app(main)
+
 def solve(N,C):
     board = Board(N)
     match C:
@@ -231,6 +301,7 @@ def solve(N,C):
     # return print_board(board)
     return board.print_board()
 
+ft.app(main)
 
 # N = int(input("\nEnter N\n"))
 # C =int(input("Choose Search Algorithm Number:\n1.Backtracking Search Algorithm\n2.Best-First Search\n3.Hill-Climbing Search\n4.Cultural Algorithm\n"))
