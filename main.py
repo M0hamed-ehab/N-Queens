@@ -166,7 +166,7 @@ def hill_climbing(board, maxrestarts=50):
 
 
 ############################################################--GUI--#############################################################
-#To run write flet run main.py in terminal but please make sure you installed flet by putting "pip install flet" in terminal/cmd
+#To run write python main.py in terminal but please make sure you installed flet by putting "pip install flet" in terminal/cmd
 def main(page: ft.Page):
     page.title = "N-Queens Problem"
     page.adaptive=True
