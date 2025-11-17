@@ -63,7 +63,7 @@ def backtrack(board, col):
 ################################################--Best-First Search Algorithm--################################################
 
 
-def heuristicBF1(state, n):
+def heuristic1(state, n):
     conflicts = 0
     for i in range(n):
         for j in range(i + 1, n):
@@ -71,7 +71,7 @@ def heuristicBF1(state, n):
                 conflicts += 1
     return conflicts
 
-def heuristicBF2(state, n):
+def heuristic2(state, n):
     row = [0] * n
     d1 = [0] * (2*n)
     d2 = [0] * (2*n)
@@ -95,7 +95,7 @@ def heuristicBF2(state, n):
 def best_first(board):
     n = board.N
     start = [random.randint(0, n - 1) for _ in range(n)]
-    pq = [(heuristicBF1(start, n), start)]
+    pq = [(heuristic1(start, n), start)]
     visited = set()
 
     while pq:
@@ -112,10 +112,51 @@ def best_first(board):
                     new_state = state.copy()
                     new_state[i] = j
                     if tuple(new_state) not in visited:
-                        heapq.heappush(pq, (heuristicBF1(new_state, n), new_state))
+                        heapq.heappush(pq, (heuristic1(new_state, n), new_state))
     return False
 ###############################################################################################################################
 
+
+
+
+
+###############################################--Hill-Climbing Search Algorithm--###############################################
+
+
+
+
+
+
+
+def hill_climbing(board, maxrestarts=50):
+    n = board.N
+    def get_neighbors(state):
+        neighbors = []
+        for i in range(n):
+            for j in range(n):
+                if j != state[i]:
+                    new_state = state.copy()
+                    new_state[i] = j
+                    neighbors.append(new_state)
+        return neighbors
+
+    for _ in range(maxrestarts):
+        current = [random.randint(0, n - 1) for _ in range(n)]
+        current_h = heuristic1(current, n)
+        while True:
+            neighbors = get_neighbors(current)
+            next_state = min(neighbors, key=lambda s: heuristic1(s, n))
+            next_h = heuristic1(next_state, n)
+            if next_h >= current_h:
+                break
+            current, current_h = next_state, next_h
+        if current_h == 0:
+            for col in range(n):
+                board.place_queen(current[col], col)
+            return True
+    return False
+
+###############################################################################################################################
 
 
 
@@ -289,9 +330,7 @@ def solve(N,C):
         case 2:
             best_first(board)
         case 3:
-            # if not hill_Climbing(board, 0):
-            #     print("error")
-            return("Not implemented yet..") ,0
+            hill_climbing(board)
         case 4:
             # if not cultural(board, 0):
             #     print("error")
