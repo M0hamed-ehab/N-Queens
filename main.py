@@ -122,12 +122,6 @@ def best_first(board):
 
 ###############################################--Hill-Climbing Search Algorithm--###############################################
 
-
-
-
-
-
-
 def hill_climbing(board, maxrestarts=50):
     n = board.N
     def get_neighbors(state):
@@ -164,6 +158,37 @@ def hill_climbing(board, maxrestarts=50):
 
 
 
+##################################################--Culture Search Algorithm--##################################################
+
+def cultural(board, population_size=110, generations=700):
+    def fitness(state):
+        return 1 / (1 + heuristic1(state, n))
+
+    n = board.N
+    population = [[random.randint(0, n - 1) for _ in range(n)] for _ in range(population_size)]
+    belief = [random.randint(0, n - 1) for _ in range(n)]
+
+    for gen in range(generations):
+        population.sort(key=lambda s: heuristic1(s, n))
+        best = population[0]
+        if heuristic1(best, n) == 0:
+            for col in range(n):
+                board.place_queen(best[col], col)
+            return True
+
+        top_half = population[:population_size // 2]
+        for i in range(n):
+            belief[i] = random.choice([s[i] for s in top_half])
+
+        new_pop = []
+        for _ in range(population_size):
+            parent = random.choice(top_half)
+            child = parent.copy()
+            idx = random.randint(0, n - 1)
+            child[idx] = belief[idx] if random.random() < 0.5 else random.randint(0, n - 1)
+            new_pop.append(child)
+        population = new_pop
+    return False
 
 ############################################################--GUI--#############################################################
 #To run write python main.py in terminal but please make sure you installed flet by putting "pip install flet" in terminal/cmd
@@ -197,9 +222,24 @@ def main(page: ft.Page):
             horizontal_lines=ft.border.BorderSide(3, ft.Colors.WHITE),)
         return table
 
+    def validation():
+        if not Ntiles.value.isdigit() or int(Ntiles.value)<=0:
+            output_text.value = "Please enter a valid positive integer for number of tiles."
+            output_container.content = output_text
+            output_time.value = ""
+            page.update()
+            return
+        if color_dropdown.value is None:
+            output_text.value = "Please select a search algorithm."
+            output_container.content = output_text
+            output_time.value = ""
+            page.update()
+            return
+
 
 
     def button_clicked(e):
+        validation()
         result, timing = solve(int(Ntiles.value), int(color_dropdown.value))
         if isinstance(result, list):
             
@@ -213,6 +253,8 @@ def main(page: ft.Page):
         page.update()
 
     def all_Clicked(e):
+        validation()
+
 
         open_new(Ntiles.value,1)
         page.update()
@@ -332,9 +374,7 @@ def solve(N,C):
         case 3:
             hill_climbing(board)
         case 4:
-            # if not cultural(board, 0):
-            #     print("error")
-            return("Not implemented yet.."),0
+            cultural(board)
         case _:
             return("No Such Search Algorithm"),0
     # return print_board(board)
