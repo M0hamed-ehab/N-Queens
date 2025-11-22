@@ -5,10 +5,14 @@ import time
 
 ########################################################--Board Class--########################################################
 class Board:
-    def __init__(self, N):
+    def __init__(self, N, start= -1):
         self.N = N
         self.board = [[0] * N for _ in range(N)]
         self.timing=time.time()
+        if start == -1:
+            self.start = [random.randint(0, N - 1) for _ in range(N)]
+        else:
+            self.start = start
 
     def is_safe(self, row, col):
         for i in range(col):
@@ -43,11 +47,13 @@ class Board:
 
 ###############################################--Backtracking Search Algorithm--###############################################
 
-def backtrack(board, col):
+def backtrack(board, col=0):
     if col >= board.N:
         return True
 
-    for i in range(board.N):
+    start = board.start[col]
+    for offset in range(board.N):
+        i = (start + offset) % board.N
         if board.is_safe(i, col):
             board.place_queen(i, col)
 
@@ -91,10 +97,12 @@ def heuristic2(state, n):
 
     return conflicts
 
+    
+
 
 def best_first(board):
     n = board.N
-    start = [random.randint(0, n - 1) for _ in range(n)]
+    start = board.start.copy()
     pq = [(heuristic1(start, n), start)]
     visited = set()
 
@@ -135,7 +143,11 @@ def hill_climbing(board, maxrestarts=50):
         return neighbors
 
     for _ in range(maxrestarts):
-        current = [random.randint(0, n - 1) for _ in range(n)]
+        if _ == 0:
+            current = board.start.copy()
+        else:
+            current = [random.randint(0, n - 1) for _ in range(n)]
+
         current_h = heuristic1(current, n)
         while True:
             neighbors = get_neighbors(current)
@@ -165,8 +177,9 @@ def cultural(board, population_size=110, generations=700):
         return 1 / (1 + heuristic1(state, n))
 
     n = board.N
-    population = [[random.randint(0, n - 1) for _ in range(n)] for _ in range(population_size)]
-    belief = [random.randint(0, n - 1) for _ in range(n)]
+    population =([board.start.copy()] + [[random.randint(0, n - 1) for _ in range(n)]for _ in range(population_size - 1)] )
+
+    belief = board.start.copy()
 
     for gen in range(generations):
         population.sort(key=lambda s: heuristic1(s, n))
@@ -203,23 +216,67 @@ def main(page: ft.Page):
     page.window.height = 700
     page.auto_scroll = True
     page.scroll= "ALWAYS"
-    
+
+    def show_green(r, c, result):
+        n = int(Ntiles.value)
+        green = set()
+
+        for i in range(n):
+            green.add((r, i)) 
+            green.add((i, c)) 
+
+        for i in range(n):
+            for j in range(n):
+                if abs(r - i) == abs(c - j):
+                    green.add((i, j))
+
+
+        columns = [ft.DataColumn(ft.Text("")) for _ in range(n)]
+        rows = []
+        for i in range(n):
+            cells = []
+            for j in range(n):
+
+                if (i, j) in green:
+                    if result[i][j] == 1:
+                        cells.append(ft.DataCell(ft.Icon(name=ft.Icons.PERSON_4_SHARP, color=ft.Colors.LIGHT_GREEN), on_tap=lambda e, r=i, c=j: show_green(r, c, result)))
+                    else:
+                        cells.append(ft.DataCell(ft.Icon(name=ft.Icons.CLOSE_ROUNDED, color=ft.Colors.LIGHT_GREEN)))
+                else:
+                    if result[i][j] == 1:
+                        cells.append(ft.DataCell(ft.Icon(name=ft.Icons.PERSON_4_SHARP, color=ft.Colors.GREEN), on_tap=lambda e, r=i, c=j: show_green(r, c, result)))
+                    else:
+                        cells.append(ft.DataCell(ft.Text(str(" "))))
+
+            rows.append(ft.DataRow(cells=cells))
+
+        table = ft.DataTable(
+            columns=columns,
+            rows=rows,
+            border=ft.border.all(3, ft.Colors.WHITE),
+            border_radius=10,
+            heading_row_height=0,
+            vertical_lines=ft.border.BorderSide(3, ft.Colors.WHITE),
+            horizontal_lines=ft.border.BorderSide(3, ft.Colors.WHITE),
+        )
+        output_container.content = table
+        page.update()
+
 
     def show_table(result):
         columns = [ft.DataColumn(ft.Text("")) for _ in range(int(Ntiles.value))]
         rows = []
-        for row_data in result:
-                cells = []
-                for cell in row_data:
-                    if cell == 1:
-                        cells.append(ft.DataCell(ft.Icon(name=ft.Icons.PERSON_4_SHARP, color=ft.Colors.GREEN)))
-                    else:
-                        cells.append(ft.DataCell(ft.Text(str(" "))))
-                rows.append(ft.DataRow(cells=cells))
+        for r, row_data in enumerate(result):
+            cells = []
+            for c, cell in enumerate(row_data):
+                if cell == 1:
+                    cells.append(ft.DataCell(ft.Icon(name=ft.Icons.PERSON_4_SHARP, color=ft.Colors.GREEN), on_tap=lambda e, r=r, c=c: show_green(r, c, result)))
+                else:
+                    cells.append(ft.DataCell(ft.Text(str(" "))))
+            rows.append(ft.DataRow(cells=cells))
 
-        table = ft.DataTable(columns=columns, rows=rows, border=ft.border.all(3, ft.Colors.WHITE), border_radius=10,
-            heading_row_height=0,vertical_lines=ft.border.BorderSide(3, ft.Colors.WHITE),
-            horizontal_lines=ft.border.BorderSide(3, ft.Colors.WHITE),)
+        table = ft.DataTable(columns=columns, rows=rows, border=ft.border.all(3, ft.Colors.WHITE), border_radius=10, heading_row_height=0,
+            vertical_lines=ft.border.BorderSide(3, ft.Colors.WHITE), horizontal_lines=ft.border.BorderSide(3, ft.Colors.WHITE),)
         return table
 
     def validation():
@@ -262,8 +319,13 @@ def main(page: ft.Page):
 
     
 
-    def open_new(n,algo):
-        result, timing = solve(int(n), algo)
+    def open_new(n,algo,start= -1):
+        n=int(n)
+        if start!=-1:
+            result, timing = solve(n, algo,start)
+        else:
+            start=[random.randint(0, n - 1) for _ in range(n)]
+            result, timing = solve(n, algo,start)
 
         x=""
         match algo:
@@ -309,7 +371,7 @@ def main(page: ft.Page):
         def next(e):
             page.close(new_page)
             if algo<4:
-                open_new(n, algo+1)
+                open_new(n, algo+1,start)
         
         new_page.actions=[ft.ElevatedButton("Next", on_click=next, bgcolor=ft.Colors.GREEN, color=ft.Colors.WHITE)]
 
@@ -364,11 +426,11 @@ def main(page: ft.Page):
 
 ###########################################################--Main--############################################################
 
-def solve(N,C):
-    board = Board(N)
+def solve(N,C,start= -1):
+    board = Board(N, start)
     match C:
         case 1:
-            backtrack(board, 0)
+            backtrack(board)
         case 2:
             best_first(board)
         case 3:
