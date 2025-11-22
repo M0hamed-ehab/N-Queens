@@ -272,7 +272,7 @@ def main(page: ft.Page):
         page.update()
 
 
-    def show_table(result):
+    def show_table(result,comp=False):
         columns = [ft.DataColumn(ft.Text("")) for _ in range(int(Ntiles.value))]
         rows = []
         
@@ -282,7 +282,10 @@ def main(page: ft.Page):
             cells = []
             for c, cell in enumerate(row_data):
                 if cell == 1:
-                    cells.append(ft.DataCell(ft.Icon(name=ft.Icons.PERSON_4_SHARP, color=ft.Colors.GREEN,), on_tap=lambda e, r=r, c=c: show_green(r, c, result)))
+                    if comp:
+                        cells.append(ft.DataCell(ft.Icon(name=ft.Icons.PERSON_4_SHARP, color=ft.Colors.GREEN)))
+                    else:
+                        cells.append(ft.DataCell(ft.Icon(name=ft.Icons.PERSON_4_SHARP, color=ft.Colors.GREEN,), on_tap=lambda e, r=r, c=c: show_green(r, c, result)))
                 else:
                     cells.append(ft.DataCell(ft.Text(str(" "))))
             rows.append(ft.DataRow(cells=cells))
@@ -389,7 +392,7 @@ def main(page: ft.Page):
         page.all_results.append((x, timing))
 
         if isinstance(result, list):
-            table = show_table(result)
+            table = show_table(result,comp=True)
             content=ft.Column(
                     [
                         ft.Text(value=x, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
