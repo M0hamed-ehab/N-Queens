@@ -212,8 +212,8 @@ def main(page: ft.Page):
         title = ft.Text(value="N-Queens", color="green", size=30, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
         center_title=True
         )
-    page.window.width = 600
-    page.window.height = 700
+    # page.window.width = 600
+    # page.window.height = 700
     page.auto_scroll = True
     page.scroll= "ALWAYS"
 
@@ -258,26 +258,47 @@ def main(page: ft.Page):
             heading_row_height=0,
             vertical_lines=ft.border.BorderSide(3, ft.Colors.WHITE),
             horizontal_lines=ft.border.BorderSide(3, ft.Colors.WHITE),
+            expand=True
         )
-        output_container.content = table
+        table_container = ft.Container(
+            content=ft.Row(
+                controls=[table],
+                scroll=ft.ScrollMode.ALWAYS,
+            ),
+            expand=True,
+            padding=10,
+        )
+        output_container.content = table_container
         page.update()
 
 
     def show_table(result):
         columns = [ft.DataColumn(ft.Text("")) for _ in range(int(Ntiles.value))]
         rows = []
+        
+
+        
         for r, row_data in enumerate(result):
             cells = []
             for c, cell in enumerate(row_data):
                 if cell == 1:
-                    cells.append(ft.DataCell(ft.Icon(name=ft.Icons.PERSON_4_SHARP, color=ft.Colors.GREEN), on_tap=lambda e, r=r, c=c: show_green(r, c, result)))
+                    cells.append(ft.DataCell(ft.Icon(name=ft.Icons.PERSON_4_SHARP, color=ft.Colors.GREEN,), on_tap=lambda e, r=r, c=c: show_green(r, c, result)))
                 else:
                     cells.append(ft.DataCell(ft.Text(str(" "))))
             rows.append(ft.DataRow(cells=cells))
 
         table = ft.DataTable(columns=columns, rows=rows, border=ft.border.all(3, ft.Colors.WHITE), border_radius=10, heading_row_height=0,
             vertical_lines=ft.border.BorderSide(3, ft.Colors.WHITE), horizontal_lines=ft.border.BorderSide(3, ft.Colors.WHITE),)
-        return table
+        
+        table_container = ft.Container(
+            content=ft.Row(
+                controls=[table],
+                scroll=ft.ScrollMode.ALWAYS, 
+            ),
+            expand=True,
+            padding=10,
+        )
+        return table_container
 
     def validation():
         if not Ntiles.value.isdigit() or int(Ntiles.value)<=0:
@@ -397,6 +418,7 @@ def main(page: ft.Page):
         alignment=ft.alignment.center,
         actions=[],
         actions_alignment=ft.MainAxisAlignment.END,
+        scrollable=True,
         )
 
         def next(e):
@@ -414,7 +436,7 @@ def main(page: ft.Page):
     
     output_text = ft.Text()
     output_time = ft.Text()
-    output_container = ft.Container(content=output_text, alignment=ft.alignment.center,)
+    output_container = ft.Container(content=output_text, alignment=ft.alignment.center, expand=True)
     submit_btn = ft.ElevatedButton(text="Solve", on_click=button_clicked, bgcolor=ft.Colors.GREEN, color=ft.Colors.WHITE)
     color_dropdown = ft.Dropdown(
         text_align=ft.TextAlign.CENTER,
@@ -442,11 +464,13 @@ def main(page: ft.Page):
                         output_time
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    scroll=ft.ScrollMode.ALWAYS
                 )
             ),
             expand=True,
             alignment=ft.alignment.center,
+            
             # padding=ft.padding.only(top=-48)
         ),
 
