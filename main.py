@@ -311,21 +311,52 @@ def main(page: ft.Page):
 
     def all_Clicked(e):
         validation()
-
-
-        open_new(Ntiles.value,1)
+        page.all_results=[]
+        start=[random.randint(0, int(Ntiles.value) - 1) for _ in range(int(Ntiles.value))]
+        open_new(Ntiles.value, 1, start)
         page.update()
 
+    def show_comp():
+        columns=[
+            ft.DataColumn(ft.Text("Algorithm")),
+            ft.DataColumn(ft.Text("Time Taken (seconds)")),
+        ]
+        rows=[]
+        for name, timing in page.all_results:
+            rows.append(
+                ft.DataRow(
+                    cells=[
+                        ft.DataCell(ft.Text(name)),
+                        ft.DataCell(ft.Text(f"{timing:.6f}"))
+                    ]
+                )
+            )
+        table=ft.DataTable(columns=columns, rows=rows, border=ft.border.all(1, ft.Colors.WHITE), border_radius=10)
 
-    
+        content=ft.Column(
+            [
+                ft.Text("Comparison of Algorithms", weight=ft.FontWeight.BOLD, size=18, text_align=ft.TextAlign.CENTER),
+                table,
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER
+        )
 
-    def open_new(n,algo,start= -1):
-        n=int(n)
-        if start!=-1:
-            result, timing = solve(n, algo,start)
-        else:
-            start=[random.randint(0, n - 1) for _ in range(n)]
-            result, timing = solve(n, algo,start)
+        compall=ft.AlertDialog(
+            modal=True,
+            title="N-Queens Comparison",
+            content=content,
+            alignment=ft.alignment.center,
+            actions=[
+                ft.ElevatedButton("Close",bgcolor=ft.Colors.GREEN, color=ft.Colors.WHITE,on_click=lambda e: page.close(compall))
+            ],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
+        page.open(compall)
+
+    def open_new(n, algo, start):
+        
+        result, timing=solve(int(n), algo, start)
 
         x=""
         match algo:
@@ -333,6 +364,8 @@ def main(page: ft.Page):
             case 2: x="Best-First Search"
             case 3: x="Hill-Climbing Search"
             case 4: x="Cultural Algorithm"
+
+        page.all_results.append((x, timing))
 
         if isinstance(result, list):
             table = show_table(result)
@@ -345,7 +378,6 @@ def main(page: ft.Page):
                     alignment=ft.MainAxisAlignment.CENTER,
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER
                 )
-            
         else:
             content=ft.Column(
                     [
@@ -355,9 +387,7 @@ def main(page: ft.Page):
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER
-                )
-
-
+            )
 
 
         new_page=ft.AlertDialog(
@@ -368,11 +398,14 @@ def main(page: ft.Page):
         actions=[],
         actions_alignment=ft.MainAxisAlignment.END,
         )
+
         def next(e):
             page.close(new_page)
             if algo<4:
                 open_new(n, algo+1,start)
-        
+            else:
+                show_comp()
+
         new_page.actions=[ft.ElevatedButton("Next", on_click=next, bgcolor=ft.Colors.GREEN, color=ft.Colors.WHITE)]
 
         page.open(new_page)
