@@ -1,45 +1,9 @@
 import flet as ft
 import heapq
 import random
-import time
+from classes.board import Board
+from classes.heuristics import Heuristics
 
-########################################################--Board Class--########################################################
-class Board:
-    def __init__(self, N, start= -1):
-        self.N = N
-        self.board = [[0] * N for _ in range(N)]
-        self.timing=time.time()
-        if start == -1:
-            self.start = [random.randint(0, N - 1) for _ in range(N)]
-        else:
-            self.start = start
-
-    def is_safe(self, row, col):
-        for i in range(col):
-            if self.board[row][i] == 1:
-                return False
-
-        for i, j in zip(range(row, -1, -1), range(col, -1, -1)):
-            if self.board[i][j] == 1:
-                return False
-
-        for i, j in zip(range(row, self.N, 1), range(col, -1, -1)):
-            if self.board[i][j] == 1:
-                return False
-
-        return True
-
-    def print_board(self):
-        if self.board==[[0] * self.N for _ in range(self.N)]:
-            return "No Solution Found",time.time()-self.timing
-        return self.board,time.time()-self.timing
-
-    def place_queen(self, row, col):
-        self.board[row][col] = 1
-
-    def remove_queen(self, row, col):
-        self.board[row][col] = 0
-###############################################################################################################################
 
 
 
@@ -68,52 +32,6 @@ def backtrack(board, col=0):
 
 ################################################--Best-First Search Algorithm--################################################
 
-
-class Heuristics:
-    
-    @staticmethod
-    def heuristic1(state, n):
-        conflicts = 0
-        for i in range(n):
-            for j in range(i + 1, n):
-                if state[i] == state[j] or abs(state[i] - state[j]) == abs(i - j):
-                    conflicts += 1
-        return conflicts
-
-    @staticmethod
-    def heuristic2(state, n):
-        row = [0] * n
-        d1 = [0] * (2*n)
-        d2 = [0] * (2*n)
-
-        for c in range(n):
-            r = state[c]
-            row[r] += 1
-            d1[c + r] += 1
-            d2[c - r + n] += 1
-
-        conflicts = 0
-        for c in range(n):
-            r = state[c]
-            conflicts += (row[r] - 1)
-            conflicts += (d1[c + r] - 1)
-            conflicts += (d2[c - r + n] - 1)
-
-        return conflicts
-    
-    current = heuristic1
-
-    @staticmethod
-    def set_heuristic(num):
-        if num == 1:
-            Heuristics.current = Heuristics.heuristic1
-            print("Heuristic set to heuristic1")
-        elif num == 2:
-            Heuristics.current = Heuristics.heuristic2
-            print("Heuristic set to heuristic2")
-        else:
-            Heuristics.current = Heuristics.heuristic1
-            print("Heuristic set to default heuristic1")
 
 
 
@@ -460,7 +378,7 @@ def main(page: ft.Page):
             result, timing=solve(int(n), al, start)
             page.all_results.append((x,result,timing))
 
-            open_new(int(n), 1, start)
+        open_new(int(n), 1, start)
      
 
     def open_new(n, algo, start):
