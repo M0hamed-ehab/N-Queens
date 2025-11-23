@@ -69,41 +69,61 @@ def backtrack(board, col=0):
 ################################################--Best-First Search Algorithm--################################################
 
 
-def heuristic1(state, n):
-    conflicts = 0
-    for i in range(n):
-        for j in range(i + 1, n):
-            if state[i] == state[j] or abs(state[i] - state[j]) == abs(i - j):
-                conflicts += 1
-    return conflicts
-
-def heuristic2(state, n):
-    row = [0] * n
-    d1 = [0] * (2*n)
-    d2 = [0] * (2*n)
-
-    for c in range(n):
-        r = state[c]
-        row[r] += 1
-        d1[c + r] += 1
-        d2[c - r + n] += 1
-
-    conflicts = 0
-    for c in range(n):
-        r = state[c]
-        conflicts += (row[r] - 1)
-        conflicts += (d1[c + r] - 1)
-        conflicts += (d2[c - r + n] - 1)
-
-    return conflicts
-
+class Heuristics:
     
+    @staticmethod
+    def heuristic1(state, n):
+        conflicts = 0
+        for i in range(n):
+            for j in range(i + 1, n):
+                if state[i] == state[j] or abs(state[i] - state[j]) == abs(i - j):
+                    conflicts += 1
+        return conflicts
+
+    @staticmethod
+    def heuristic2(state, n):
+        row = [0] * n
+        d1 = [0] * (2*n)
+        d2 = [0] * (2*n)
+
+        for c in range(n):
+            r = state[c]
+            row[r] += 1
+            d1[c + r] += 1
+            d2[c - r + n] += 1
+
+        conflicts = 0
+        for c in range(n):
+            r = state[c]
+            conflicts += (row[r] - 1)
+            conflicts += (d1[c + r] - 1)
+            conflicts += (d2[c - r + n] - 1)
+
+        return conflicts
+    
+    current = heuristic1
+
+    @staticmethod
+    def set_heuristic(num):
+        if num == 1:
+            Heuristics.current = Heuristics.heuristic1
+            print("Heuristic set to heuristic1")
+        elif num == 2:
+            Heuristics.current = Heuristics.heuristic2
+            print("Heuristic set to heuristic2")
+        else:
+            Heuristics.current = Heuristics.heuristic1
+            print("Heuristic set to default heuristic1")
+
+
+
 
 
 def best_first(board):
     n = board.N
     start = board.start.copy()
-    pq = [(heuristic1(start, n), start)]
+    heuristic = Heuristics.current
+    pq = [(heuristic(start, n), start)]
     visited = set()
 
     while pq:
@@ -120,8 +140,11 @@ def best_first(board):
                     new_state = state.copy()
                     new_state[i] = j
                     if tuple(new_state) not in visited:
-                        heapq.heappush(pq, (heuristic1(new_state, n), new_state))
+                        heapq.heappush(pq, (heuristic(new_state, n), new_state))
     return False
+
+    
+
 ###############################################################################################################################
 
 
@@ -132,6 +155,8 @@ def best_first(board):
 
 def hill_climbing(board, maxrestarts=50):
     n = board.N
+    heuristic = Heuristics.current
+
     def get_neighbors(state):
         neighbors = []
         for i in range(n):
@@ -148,11 +173,11 @@ def hill_climbing(board, maxrestarts=50):
         else:
             current = [random.randint(0, n - 1) for _ in range(n)]
 
-        current_h = heuristic1(current, n)
+        current_h = heuristic(current, n)
         while True:
             neighbors = get_neighbors(current)
-            next_state = min(neighbors, key=lambda s: heuristic1(s, n))
-            next_h = heuristic1(next_state, n)
+            next_state = min(neighbors, key=lambda s: heuristic(s, n))
+            next_h = heuristic(next_state, n)
             if next_h >= current_h:
                 break
             current, current_h = next_state, next_h
@@ -173,8 +198,10 @@ def hill_climbing(board, maxrestarts=50):
 ##################################################--Culture Search Algorithm--##################################################
 
 def cultural(board, population_size=110, generations=700):
+    heuristic = Heuristics.current
+
     def fitness(state):
-        return 1 / (1 + heuristic1(state, n))
+        return 1 / (1 + heuristic(state, n))
 
     n = board.N
     population =([board.start.copy()] + [[random.randint(0, n - 1) for _ in range(n)]for _ in range(population_size - 1)] )
@@ -182,9 +209,9 @@ def cultural(board, population_size=110, generations=700):
     belief = board.start.copy()
 
     for gen in range(generations):
-        population.sort(key=lambda s: heuristic1(s, n))
+        population.sort(key=lambda s: heuristic(s, n))
         best = population[0]
-        if heuristic1(best, n) == 0:
+        if heuristic(best, n) == 0:
             for col in range(n):
                 board.place_queen(best[col], col)
             return True
@@ -208,9 +235,49 @@ def cultural(board, population_size=110, generations=700):
 def main(page: ft.Page):
     page.title = "N-Queens Problem"
     page.adaptive=True
+    
+    def handle_dismissal(e):
+        print(f"Drawer dismissed!")
+
+    def handle_change(e):
+        print(f"Selected Index changed: {e.control.selected_index}")
+        page.close(drawer)    
+        
+    drawer = ft.NavigationDrawer(
+        on_dismiss=handle_dismissal,
+        on_change=handle_change,
+        tile_padding=ft.padding.all(10),
+        controls=[
+            ft.Container(height=30),
+            ft.Text("Select Heuristic", size=20, text_align=ft.TextAlign.CENTER, color=ft.Colors.GREEN),
+            ft.Container(                 
+                content=ft.RadioGroup(
+                            content=ft.Row(
+                            [
+                            ft.Radio(value="1", label="1",adaptive=True,expand=True),
+                            ft.Radio(value="2", label="2",adaptive=True,expand=True),
+
+                            ], alignment=ft.MainAxisAlignment.CENTER, expand=True
+                            ), on_change=lambda e: Heuristics.set_heuristic(1 if e.control.value=="1" else 2), value="1"
+                            ), 
+                        padding=ft.padding.all(10)
+                    ),
+            ft.Divider(thickness=2),
+            ft.Text("Select Heuristic", size=20, text_align=ft.TextAlign.CENTER, color=ft.Colors.GREEN),
+
+            
+           
+            
+        ],
+    )
+    
+    
+    
+    
+    
     page.appbar = ft.AppBar(
         title = ft.Text(value="N-Queens", color="green", size=30, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
-        center_title=True
+        center_title=True, actions=[ft.IconButton(ft.Icons.SETTINGS_ROUNDED,on_click=lambda e: page.open(drawer)),],
         )
     # page.window.width = 600
     # page.window.height = 700
@@ -337,7 +404,7 @@ def main(page: ft.Page):
         validation()
         page.all_results=[]
         start=[random.randint(0, int(Ntiles.value) - 1) for _ in range(int(Ntiles.value))]
-        open_new(Ntiles.value, 1, start)
+        solve_all(int(Ntiles.value), start)
         page.update()
 
     def show_comp():
@@ -346,7 +413,7 @@ def main(page: ft.Page):
             ft.DataColumn(ft.Text("Time Taken (seconds)")),
         ]
         rows=[]
-        for name, timing in page.all_results:
+        for name,t, timing in page.all_results:
             rows.append(
                 ft.DataRow(
                     cells=[
@@ -378,18 +445,33 @@ def main(page: ft.Page):
         )
         page.open(compall)
 
+
+    def solve_all(n, start):
+        page.all_results=[]
+        
+        for al in range(1,5):
+            x=""
+            match al:
+                case 1: x="Backtracking Search"
+                case 2: x="Best-First Search"
+                case 3: x="Hill-Climbing Search"
+                case 4: x="Cultural Algorithm"
+                
+            result, timing=solve(int(n), al, start)
+            page.all_results.append((x,result,timing))
+
+            open_new(int(n), 1, start)
+     
+
     def open_new(n, algo, start):
         
-        result, timing=solve(int(n), algo, start)
+        
+        if algo> 4:
+            show_comp()
+            return
+        
+        x,result,timing=page.all_results[algo-1]
 
-        x=""
-        match algo:
-            case 1: x="Backtracking Search"
-            case 2: x="Best-First Search"
-            case 3: x="Hill-Climbing Search"
-            case 4: x="Cultural Algorithm"
-
-        page.all_results.append((x, timing))
 
         if isinstance(result, list):
             table = show_table(result,comp=True)
@@ -426,10 +508,8 @@ def main(page: ft.Page):
 
         def next(e):
             page.close(new_page)
-            if algo<4:
-                open_new(n, algo+1,start)
-            else:
-                show_comp()
+            open_new(n, algo+1, start)
+                    
 
         new_page.actions=[ft.ElevatedButton("Next", on_click=next, bgcolor=ft.Colors.GREEN, color=ft.Colors.WHITE)]
 
@@ -477,7 +557,7 @@ def main(page: ft.Page):
             # padding=ft.padding.only(top=-48)
         ),
 
-    )
+        )
     
 
 
