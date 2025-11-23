@@ -11,6 +11,8 @@ class Board:
             self.start = [random.randint(0, N - 1) for _ in range(N)]
         else:
             self.start = start
+    
+        print("Initial State:", self.start)
 
     def is_safe(self, row, col):
         for i in range(col):
