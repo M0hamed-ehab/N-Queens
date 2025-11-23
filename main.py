@@ -5,6 +5,10 @@ from classes.board import Board
 from classes.heuristics import Heuristics
 
 
+MRes_value=50
+Genn_value=700
+Popp_value=110
+
 
 
 ###########################################################################--Algorithms--###########################################################################
@@ -74,7 +78,7 @@ def best_first(board):
 def hill_climbing(board, maxrestarts=50):
     n = board.N
     heuristic = Heuristics.current
-
+    print(f"\nMax Restarts={MRes_value}\n")
     def get_neighbors(state):
         neighbors = []
         for i in range(n):
@@ -117,6 +121,9 @@ def hill_climbing(board, maxrestarts=50):
 
 def cultural(board, population_size=110, generations=700):
     heuristic = Heuristics.current
+    print(f"\nPopulation Size={Popp_value}\n")
+    print(f"\nGenerations={Genn_value}\n")
+
 
     def fitness(state):
         return 1 / (1 + heuristic(state, n))
@@ -160,7 +167,36 @@ def main(page: ft.Page):
     def handle_change(e):
         print(f"Selected Index changed: {e.control.selected_index}")
         page.close(drawer)    
+    
+    def set_MRes(e):
+        print(MRes.value)
+        if MRes.value!='':
+            global MRes_value
+            MRes_value=int(MRes.value)
+
+
+    def set_Popp(e):
+        print(Popp.value)
+        if Popp.value!='':
+            global Popp_value
+            Popp_value=int(Popp.value)
+       
+    def set_Genn(e):
+        print(Genn.value)
+        if Genn.value!='':
+            global Genn_value
+            Genn_value=int(Genn.value)
         
+    
+    MRes=ft.TextField(hint_text="Max Restarts: Default 50", text_align=ft.TextAlign.CENTER, keyboard_type=ft.KeyboardType.NUMBER)
+    MRB=ft.ElevatedButton(text="Set", on_click=set_MRes, bgcolor=ft.Colors.GREEN, color=ft.Colors.WHITE,)
+    
+    Popp=ft.TextField(hint_text="Population Size: Default 110", text_align=ft.TextAlign.CENTER, keyboard_type=ft.KeyboardType.NUMBER)
+    PoppB=ft.ElevatedButton(text="Set", on_click=set_Popp, bgcolor=ft.Colors.GREEN, color=ft.Colors.WHITE,)
+    
+    Genn=ft.TextField(hint_text="Generations: Default 700", text_align=ft.TextAlign.CENTER, keyboard_type=ft.KeyboardType.NUMBER)
+    GennB=ft.ElevatedButton(text="Set", on_click=set_Genn, bgcolor=ft.Colors.GREEN, color=ft.Colors.WHITE,)
+    
     drawer = ft.NavigationDrawer(
         on_dismiss=handle_dismissal,
         on_change=handle_change,
@@ -181,7 +217,21 @@ def main(page: ft.Page):
                         padding=ft.padding.all(10)
                     ),
             ft.Divider(thickness=2),
-            ft.Text("Select Heuristic", size=20, text_align=ft.TextAlign.CENTER, color=ft.Colors.GREEN),
+            ft.Text("Hill-Climbing", size=20, text_align=ft.TextAlign.CENTER, color=ft.Colors.GREEN),
+            ft.Container( 
+                content=ft.Column(
+                [MRes, ft.Container(height=10),
+                 MRB]
+                ) , padding=ft.padding.all(10), alignment=ft.alignment.center),
+            ft.Divider(thickness=2),
+            ft.Text("Culture", size=20, text_align=ft.TextAlign.CENTER, color=ft.Colors.GREEN),
+            ft.Container( 
+                content=ft.Column(
+                [Popp, ft.Container(height=10),
+                 PoppB,ft.Container(height=10),Genn, ft.Container(height=10),GennB]
+                ) , padding=ft.padding.all(10), alignment=ft.alignment.center),
+
+            
 
             
            
@@ -492,9 +542,9 @@ def solve(N,C,start= -1):
         case 2:
             best_first(board)
         case 3:
-            hill_climbing(board)
+            hill_climbing(board,MRes_value)
         case 4:
-            cultural(board)
+            cultural(board,Popp_value,Genn_value)
         case _:
             return("No Such Search Algorithm"),0
     # return print_board(board)
