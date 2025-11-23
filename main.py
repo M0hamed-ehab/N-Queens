@@ -1,45 +1,13 @@
 import flet as ft
 import heapq
 import random
-import time
+from classes.board import Board
+from classes.heuristics import Heuristics
 
-########################################################--Board Class--########################################################
-class Board:
-    def __init__(self, N, start= -1):
-        self.N = N
-        self.board = [[0] * N for _ in range(N)]
-        self.timing=time.time()
-        if start == -1:
-            self.start = [random.randint(0, N - 1) for _ in range(N)]
-        else:
-            self.start = start
 
-    def is_safe(self, row, col):
-        for i in range(col):
-            if self.board[row][i] == 1:
-                return False
-
-        for i, j in zip(range(row, -1, -1), range(col, -1, -1)):
-            if self.board[i][j] == 1:
-                return False
-
-        for i, j in zip(range(row, self.N, 1), range(col, -1, -1)):
-            if self.board[i][j] == 1:
-                return False
-
-        return True
-
-    def print_board(self):
-        if self.board==[[0] * self.N for _ in range(self.N)]:
-            return "No Solution Found",time.time()-self.timing
-        return self.board,time.time()-self.timing
-
-    def place_queen(self, row, col):
-        self.board[row][col] = 1
-
-    def remove_queen(self, row, col):
-        self.board[row][col] = 0
-###############################################################################################################################
+MRes_value=50
+Genn_value=700
+Popp_value=110
 
 
 
@@ -69,41 +37,15 @@ def backtrack(board, col=0):
 ################################################--Best-First Search Algorithm--################################################
 
 
-def heuristic1(state, n):
-    conflicts = 0
-    for i in range(n):
-        for j in range(i + 1, n):
-            if state[i] == state[j] or abs(state[i] - state[j]) == abs(i - j):
-                conflicts += 1
-    return conflicts
 
-def heuristic2(state, n):
-    row = [0] * n
-    d1 = [0] * (2*n)
-    d2 = [0] * (2*n)
 
-    for c in range(n):
-        r = state[c]
-        row[r] += 1
-        d1[c + r] += 1
-        d2[c - r + n] += 1
-
-    conflicts = 0
-    for c in range(n):
-        r = state[c]
-        conflicts += (row[r] - 1)
-        conflicts += (d1[c + r] - 1)
-        conflicts += (d2[c - r + n] - 1)
-
-    return conflicts
-
-    
 
 
 def best_first(board):
     n = board.N
     start = board.start.copy()
-    pq = [(heuristic1(start, n), start)]
+    heuristic = Heuristics.current
+    pq = [(heuristic(start, n), start)]
     visited = set()
 
     while pq:
@@ -120,8 +62,11 @@ def best_first(board):
                     new_state = state.copy()
                     new_state[i] = j
                     if tuple(new_state) not in visited:
-                        heapq.heappush(pq, (heuristic1(new_state, n), new_state))
+                        heapq.heappush(pq, (heuristic(new_state, n), new_state))
     return False
+
+    
+
 ###############################################################################################################################
 
 
@@ -132,6 +77,8 @@ def best_first(board):
 
 def hill_climbing(board, maxrestarts=50):
     n = board.N
+    heuristic = Heuristics.current
+    print(f"\nMax Restarts={MRes_value}\n")
     def get_neighbors(state):
         neighbors = []
         for i in range(n):
@@ -148,11 +95,11 @@ def hill_climbing(board, maxrestarts=50):
         else:
             current = [random.randint(0, n - 1) for _ in range(n)]
 
-        current_h = heuristic1(current, n)
+        current_h = heuristic(current, n)
         while True:
             neighbors = get_neighbors(current)
-            next_state = min(neighbors, key=lambda s: heuristic1(s, n))
-            next_h = heuristic1(next_state, n)
+            next_state = min(neighbors, key=lambda s: heuristic(s, n))
+            next_h = heuristic(next_state, n)
             if next_h >= current_h:
                 break
             current, current_h = next_state, next_h
@@ -173,8 +120,13 @@ def hill_climbing(board, maxrestarts=50):
 ##################################################--Culture Search Algorithm--##################################################
 
 def cultural(board, population_size=110, generations=700):
+    heuristic = Heuristics.current
+    print(f"\nPopulation Size={Popp_value}\n")
+    print(f"\nGenerations={Genn_value}\n")
+
+
     def fitness(state):
-        return 1 / (1 + heuristic1(state, n))
+        return 1 / (1 + heuristic(state, n))
 
     n = board.N
     population =([board.start.copy()] + [[random.randint(0, n - 1) for _ in range(n)]for _ in range(population_size - 1)] )
@@ -182,9 +134,9 @@ def cultural(board, population_size=110, generations=700):
     belief = board.start.copy()
 
     for gen in range(generations):
-        population.sort(key=lambda s: heuristic1(s, n))
+        population.sort(key=lambda s: heuristic(s, n))
         best = population[0]
-        if heuristic1(best, n) == 0:
+        if heuristic(best, n) == 0:
             for col in range(n):
                 board.place_queen(best[col], col)
             return True
@@ -208,12 +160,95 @@ def cultural(board, population_size=110, generations=700):
 def main(page: ft.Page):
     page.title = "N-Queens Problem"
     page.adaptive=True
+    
+    def handle_dismissal(e):
+        print(f"Drawer dismissed!")
+
+    def handle_change(e):
+        print(f"Selected Index changed: {e.control.selected_index}")
+        page.close(drawer)    
+    
+    def set_MRes(e):
+        print(MRes.value)
+        if MRes.value!='':
+            global MRes_value
+            MRes_value=int(MRes.value)
+
+
+    def set_Popp(e):
+        print(Popp.value)
+        if Popp.value!='':
+            global Popp_value
+            Popp_value=int(Popp.value)
+       
+    def set_Genn(e):
+        print(Genn.value)
+        if Genn.value!='':
+            global Genn_value
+            Genn_value=int(Genn.value)
+        
+    
+    MRes=ft.TextField(hint_text="Max Restarts: Default 50", text_align=ft.TextAlign.CENTER, keyboard_type=ft.KeyboardType.NUMBER)
+    MRB=ft.ElevatedButton(text="Set", on_click=set_MRes, bgcolor=ft.Colors.GREEN, color=ft.Colors.WHITE,)
+    
+    Popp=ft.TextField(hint_text="Population Size: Default 110", text_align=ft.TextAlign.CENTER, keyboard_type=ft.KeyboardType.NUMBER)
+    PoppB=ft.ElevatedButton(text="Set", on_click=set_Popp, bgcolor=ft.Colors.GREEN, color=ft.Colors.WHITE,)
+    
+    Genn=ft.TextField(hint_text="Generations: Default 700", text_align=ft.TextAlign.CENTER, keyboard_type=ft.KeyboardType.NUMBER)
+    GennB=ft.ElevatedButton(text="Set", on_click=set_Genn, bgcolor=ft.Colors.GREEN, color=ft.Colors.WHITE,)
+    
+    drawer = ft.NavigationDrawer(
+        on_dismiss=handle_dismissal,
+        on_change=handle_change,
+        tile_padding=ft.padding.all(10),
+        controls=[
+            ft.Container(height=30),
+            ft.Text("Select Heuristic", size=20, text_align=ft.TextAlign.CENTER, color=ft.Colors.GREEN),
+            ft.Container(                 
+                content=ft.RadioGroup(
+                            content=ft.Row(
+                            [
+                            ft.Radio(value="1", label="1",adaptive=True,expand=True),
+                            ft.Radio(value="2", label="2",adaptive=True,expand=True),
+
+                            ], alignment=ft.MainAxisAlignment.CENTER, expand=True
+                            ), on_change=lambda e: Heuristics.set_heuristic(1 if e.control.value=="1" else 2), value="1"
+                            ), 
+                        padding=ft.padding.all(10)
+                    ),
+            ft.Divider(thickness=2),
+            ft.Text("Hill-Climbing", size=20, text_align=ft.TextAlign.CENTER, color=ft.Colors.GREEN),
+            ft.Container( 
+                content=ft.Column(
+                [MRes, ft.Container(height=10),
+                 MRB]
+                ) , padding=ft.padding.all(10), alignment=ft.alignment.center),
+            ft.Divider(thickness=2),
+            ft.Text("Culture", size=20, text_align=ft.TextAlign.CENTER, color=ft.Colors.GREEN),
+            ft.Container( 
+                content=ft.Column(
+                [Popp, ft.Container(height=10),
+                 PoppB,ft.Container(height=10),Genn, ft.Container(height=10),GennB]
+                ) , padding=ft.padding.all(10), alignment=ft.alignment.center),
+
+            
+
+            
+           
+            
+        ],
+    )
+    
+    
+    
+    
+    
     page.appbar = ft.AppBar(
         title = ft.Text(value="N-Queens", color="green", size=30, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
-        center_title=True
+        center_title=True, actions=[ft.IconButton(ft.Icons.SETTINGS_ROUNDED,on_click=lambda e: page.open(drawer)),],
         )
-    page.window.width = 600
-    page.window.height = 700
+    # page.window.width = 600
+    # page.window.height = 700
     page.auto_scroll = True
     page.scroll= "ALWAYS"
 
@@ -258,26 +293,50 @@ def main(page: ft.Page):
             heading_row_height=0,
             vertical_lines=ft.border.BorderSide(3, ft.Colors.WHITE),
             horizontal_lines=ft.border.BorderSide(3, ft.Colors.WHITE),
+            expand=True
         )
-        output_container.content = table
+        table_container = ft.Container(
+            content=ft.Row(
+                controls=[table],
+                scroll=ft.ScrollMode.ALWAYS,
+            ),
+            expand=True,
+            padding=10,
+        )
+        output_container.content = table_container
         page.update()
 
 
-    def show_table(result):
+    def show_table(result,comp=False):
         columns = [ft.DataColumn(ft.Text("")) for _ in range(int(Ntiles.value))]
         rows = []
+        
+
+        
         for r, row_data in enumerate(result):
             cells = []
             for c, cell in enumerate(row_data):
                 if cell == 1:
-                    cells.append(ft.DataCell(ft.Icon(name=ft.Icons.PERSON_4_SHARP, color=ft.Colors.GREEN), on_tap=lambda e, r=r, c=c: show_green(r, c, result)))
+                    if comp:
+                        cells.append(ft.DataCell(ft.Icon(name=ft.Icons.PERSON_4_SHARP, color=ft.Colors.GREEN)))
+                    else:
+                        cells.append(ft.DataCell(ft.Icon(name=ft.Icons.PERSON_4_SHARP, color=ft.Colors.GREEN,), on_tap=lambda e, r=r, c=c: show_green(r, c, result)))
                 else:
                     cells.append(ft.DataCell(ft.Text(str(" "))))
             rows.append(ft.DataRow(cells=cells))
 
         table = ft.DataTable(columns=columns, rows=rows, border=ft.border.all(3, ft.Colors.WHITE), border_radius=10, heading_row_height=0,
             vertical_lines=ft.border.BorderSide(3, ft.Colors.WHITE), horizontal_lines=ft.border.BorderSide(3, ft.Colors.WHITE),)
-        return table
+        
+        table_container = ft.Container(
+            content=ft.Row(
+                controls=[table],
+                scroll=ft.ScrollMode.ALWAYS, 
+            ),
+            expand=True,
+            padding=10,
+        )
+        return table_container
 
     def validation():
         if not Ntiles.value.isdigit() or int(Ntiles.value)<=0:
@@ -313,7 +372,7 @@ def main(page: ft.Page):
         validation()
         page.all_results=[]
         start=[random.randint(0, int(Ntiles.value) - 1) for _ in range(int(Ntiles.value))]
-        open_new(Ntiles.value, 1, start)
+        solve_all(int(Ntiles.value), start)
         page.update()
 
     def show_comp():
@@ -322,7 +381,7 @@ def main(page: ft.Page):
             ft.DataColumn(ft.Text("Time Taken (seconds)")),
         ]
         rows=[]
-        for name, timing in page.all_results:
+        for name,t, timing in page.all_results:
             rows.append(
                 ft.DataRow(
                     cells=[
@@ -354,21 +413,36 @@ def main(page: ft.Page):
         )
         page.open(compall)
 
+
+    def solve_all(n, start):
+        page.all_results=[]
+        
+        for al in range(1,5):
+            x=""
+            match al:
+                case 1: x="Backtracking Search"
+                case 2: x="Best-First Search"
+                case 3: x="Hill-Climbing Search"
+                case 4: x="Cultural Algorithm"
+                
+            result, timing=solve(int(n), al, start)
+            page.all_results.append((x,result,timing))
+
+        open_new(int(n), 1, start)
+     
+
     def open_new(n, algo, start):
         
-        result, timing=solve(int(n), algo, start)
+        
+        if algo> 4:
+            show_comp()
+            return
+        
+        x,result,timing=page.all_results[algo-1]
 
-        x=""
-        match algo:
-            case 1: x="Backtracking Search"
-            case 2: x="Best-First Search"
-            case 3: x="Hill-Climbing Search"
-            case 4: x="Cultural Algorithm"
-
-        page.all_results.append((x, timing))
 
         if isinstance(result, list):
-            table = show_table(result)
+            table = show_table(result,comp=True)
             content=ft.Column(
                     [
                         ft.Text(value=x, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
@@ -397,14 +471,13 @@ def main(page: ft.Page):
         alignment=ft.alignment.center,
         actions=[],
         actions_alignment=ft.MainAxisAlignment.END,
+        scrollable=True,
         )
 
         def next(e):
             page.close(new_page)
-            if algo<4:
-                open_new(n, algo+1,start)
-            else:
-                show_comp()
+            open_new(n, algo+1, start)
+                    
 
         new_page.actions=[ft.ElevatedButton("Next", on_click=next, bgcolor=ft.Colors.GREEN, color=ft.Colors.WHITE)]
 
@@ -414,7 +487,7 @@ def main(page: ft.Page):
     
     output_text = ft.Text()
     output_time = ft.Text()
-    output_container = ft.Container(content=output_text, alignment=ft.alignment.center,)
+    output_container = ft.Container(content=output_text, alignment=ft.alignment.center, expand=True)
     submit_btn = ft.ElevatedButton(text="Solve", on_click=button_clicked, bgcolor=ft.Colors.GREEN, color=ft.Colors.WHITE)
     color_dropdown = ft.Dropdown(
         text_align=ft.TextAlign.CENTER,
@@ -442,15 +515,17 @@ def main(page: ft.Page):
                         output_time
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    scroll=ft.ScrollMode.ALWAYS
                 )
             ),
             expand=True,
             alignment=ft.alignment.center,
+            
             # padding=ft.padding.only(top=-48)
         ),
 
-    )
+        )
     
 
 
@@ -467,9 +542,9 @@ def solve(N,C,start= -1):
         case 2:
             best_first(board)
         case 3:
-            hill_climbing(board)
+            hill_climbing(board,MRes_value)
         case 4:
-            cultural(board)
+            cultural(board,Popp_value,Genn_value)
         case _:
             return("No Such Search Algorithm"),0
     # return print_board(board)
