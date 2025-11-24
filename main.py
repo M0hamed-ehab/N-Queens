@@ -123,12 +123,12 @@ def cultural(board, population_size=110, generations=700):
     heuristic = Heuristics.current
     print(f"\nPopulation Size={Popp_value}\n")
     print(f"\nGenerations={Genn_value}\n")
-
-
-    def fitness(state):
-        return 1 / (1 + heuristic(state, n))
-
     n = board.N
+
+
+    # def fitness(state):
+    #     return 1 / (1 + heuristic(state, n))
+
     population =([board.start.copy()] + [[random.randint(0, n - 1) for _ in range(n)]for _ in range(population_size - 1)] )
 
     belief = board.start.copy()
@@ -210,9 +210,10 @@ def main(page: ft.Page):
                             [
                             ft.Radio(value="1", label="1",adaptive=True,expand=True),
                             ft.Radio(value="2", label="2",adaptive=True,expand=True),
+                            ft.Radio(value="3", label="3",adaptive=True,expand=True),
 
                             ], alignment=ft.MainAxisAlignment.CENTER, expand=True
-                            ), on_change=lambda e: Heuristics.set_heuristic(1 if e.control.value=="1" else 2), value="1"
+                            ), on_change=lambda e: Heuristics.set_heuristic(1 if e.control.value=="1" else 2 if e.control.value=="2" else 3), value="1"
                             ), 
                         padding=ft.padding.all(10)
                     ),
