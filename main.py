@@ -275,12 +275,12 @@ def main(page: ft.Page):
 
                 if (i, j) in green:
                     if result[i][j] == 1:
-                        cells.append(ft.DataCell(ft.Icon(name=ft.Icons.PERSON_4_SHARP, color=ft.Colors.LIGHT_GREEN), on_tap=lambda e, r=i, c=j: show_green(r, c, result)))
+                        cells.append(ft.DataCell(ft.Image(src="icons/4LG.png",fit=ft.ImageFit.CONTAIN, width=24,height=24), on_tap=lambda e, r=i, c=j: show_green(r, c, result)))
                     else:
                         cells.append(ft.DataCell(ft.Icon(name=ft.Icons.CLOSE_ROUNDED, color=ft.Colors.LIGHT_GREEN)))
                 else:
                     if result[i][j] == 1:
-                        cells.append(ft.DataCell(ft.Icon(name=ft.Icons.PERSON_4_SHARP, color=ft.Colors.GREEN), on_tap=lambda e, r=i, c=j: show_green(r, c, result)))
+                        cells.append(ft.DataCell(ft.Image(src="icons/4G.png",fit=ft.ImageFit.CONTAIN, width=24,height=24), on_tap=lambda e, r=i, c=j: show_green(r, c, result)))
                     else:
                         cells.append(ft.DataCell(ft.Text(str(" "))))
 
@@ -319,9 +319,9 @@ def main(page: ft.Page):
             for c, cell in enumerate(row_data):
                 if cell == 1:
                     if comp:
-                        cells.append(ft.DataCell(ft.Icon(name=ft.Icons.PERSON_4_SHARP, color=ft.Colors.GREEN)))
+                        cells.append(ft.DataCell(ft.Image(src="icons/4G.png",fit=ft.ImageFit.CONTAIN, width=24,height=24)))
                     else:
-                        cells.append(ft.DataCell(ft.Icon(name=ft.Icons.PERSON_4_SHARP, color=ft.Colors.GREEN,), on_tap=lambda e, r=r, c=c: show_green(r, c, result)))
+                        cells.append(ft.DataCell(ft.Image(src="icons/4G.png",fit=ft.ImageFit.CONTAIN, width=24,height=24), on_tap=lambda e, r=r, c=c: show_green(r, c, result)))
                 else:
                     cells.append(ft.DataCell(ft.Text(str(" "))))
             rows.append(ft.DataRow(cells=cells))
