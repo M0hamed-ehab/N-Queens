@@ -1,159 +1,17 @@
 import flet as ft
 import heapq
 import random
+import matplotlib
+import matplotlib.pyplot as plt
+from flet.matplotlib_chart import MatplotlibChart
 from classes.board import Board
 from classes.heuristics import Heuristics
+from classes.searches import SA
 
-
-MRes_value=50
-Genn_value=700
-Popp_value=110
-
-
-
-###########################################################################--Algorithms--###########################################################################
-
-###############################################--Backtracking Search Algorithm--###############################################
-
-def backtrack(board, col=0):
-    if col >= board.N:
-        return True
-
-    start = board.start[col]
-    for offset in range(board.N):
-        i = (start + offset) % board.N
-        if board.is_safe(i, col):
-            board.place_queen(i, col)
-
-            if backtrack(board, col + 1):
-                return True
-
-            board.remove_queen(i, col)
-
-    return False
-###############################################################################################################################
-
-
-################################################--Best-First Search Algorithm--################################################
+matplotlib.use("svg")
 
 
 
-
-
-
-def best_first(board):
-    n = board.N
-    start = board.start.copy()
-    heuristic = Heuristics.current
-    pq = [(heuristic(start, n), start)]
-    visited = set()
-
-    while pq:
-        h, state = heapq.heappop(pq)
-
-        if h == 0:
-            for col in range(n):
-                board.place_queen(state[col], col)
-            return True
-        visited.add(tuple(state))
-        for i in range(n):
-            for j in range(n):
-                if j != state[i]:
-                    new_state = state.copy()
-                    new_state[i] = j
-                    if tuple(new_state) not in visited:
-                        heapq.heappush(pq, (heuristic(new_state, n), new_state))
-    return False
-
-    
-
-###############################################################################################################################
-
-
-
-
-
-###############################################--Hill-Climbing Search Algorithm--###############################################
-
-def hill_climbing(board, maxrestarts=50):
-    n = board.N
-    heuristic = Heuristics.current
-    print(f"\nMax Restarts={MRes_value}\n")
-    def get_neighbors(state):
-        neighbors = []
-        for i in range(n):
-            for j in range(n):
-                if j != state[i]:
-                    new_state = state.copy()
-                    new_state[i] = j
-                    neighbors.append(new_state)
-        return neighbors
-
-    for _ in range(maxrestarts):
-        if _ == 0:
-            current = board.start.copy()
-        else:
-            current = [random.randint(0, n - 1) for _ in range(n)]
-
-        current_h = heuristic(current, n)
-        while True:
-            neighbors = get_neighbors(current)
-            next_state = min(neighbors, key=lambda s: heuristic(s, n))
-            next_h = heuristic(next_state, n)
-            if next_h >= current_h:
-                break
-            current, current_h = next_state, next_h
-        if current_h == 0:
-            for col in range(n):
-                board.place_queen(current[col], col)
-            return True
-    return False
-
-###############################################################################################################################
-
-
-
-
-
-
-
-##################################################--Culture Search Algorithm--##################################################
-
-def cultural(board, population_size=110, generations=700):
-    heuristic = Heuristics.current
-    print(f"\nPopulation Size={Popp_value}\n")
-    print(f"\nGenerations={Genn_value}\n")
-    n = board.N
-
-
-    # def fitness(state):
-    #     return 1 / (1 + heuristic(state, n))
-
-    population =([board.start.copy()] + [[random.randint(0, n - 1) for _ in range(n)]for _ in range(population_size - 1)] )
-
-    belief = board.start.copy()
-
-    for gen in range(generations):
-        population.sort(key=lambda s: heuristic(s, n))
-        best = population[0]
-        if heuristic(best, n) == 0:
-            for col in range(n):
-                board.place_queen(best[col], col)
-            return True
-
-        top_half = population[:population_size // 2]
-        for i in range(n):
-            belief[i] = random.choice([s[i] for s in top_half])
-
-        new_pop = []
-        for _ in range(population_size):
-            parent = random.choice(top_half)
-            child = parent.copy()
-            idx = random.randint(0, n - 1)
-            child[idx] = belief[idx] if random.random() < 0.5 else random.randint(0, n - 1)
-            new_pop.append(child)
-        population = new_pop
-    return False
 
 ############################################################--GUI--#############################################################
 #To run write python main.py in terminal but please make sure you installed flet by putting "pip install flet" in terminal/cmd
@@ -166,7 +24,12 @@ def main(page: ft.Page):
 
     def handle_change(e):
         print(f"Selected Index changed: {e.control.selected_index}")
-        page.close(drawer)    
+        page.close(drawer)
+    
+    
+    MRes_value=50
+    Genn_value=700
+    Popp_value=110   
     
     def set_MRes(e):
         print(MRes.value)
@@ -206,11 +69,11 @@ def main(page: ft.Page):
             ft.Text("Select Heuristic", size=20, text_align=ft.TextAlign.CENTER, color=ft.Colors.GREEN),
             ft.Container(                 
                 content=ft.RadioGroup(
-                            content=ft.Row(
+                            content=ft.Column(
                             [
-                            ft.Radio(value="1", label="1",adaptive=True,expand=True),
-                            ft.Radio(value="2", label="2",adaptive=True,expand=True),
-                            ft.Radio(value="3", label="3",adaptive=True,expand=True),
+                            ft.Radio(value="1", label="Number of attacking pairs (optimized)",adaptive=True,expand=True),
+                            ft.Radio(value="2", label="Number of queens being attacked",adaptive=True,expand=True),
+                            ft.Radio(value="3", label="Number of attacking pairs",adaptive=True,expand=True),
 
                             ], alignment=ft.MainAxisAlignment.CENTER, expand=True
                             ), on_change=lambda e: Heuristics.set_heuristic(1 if e.control.value=="1" else 2 if e.control.value=="2" else 3), value="1"
@@ -357,11 +220,12 @@ def main(page: ft.Page):
 
     def button_clicked(e):
         validation()
-        result, timing = solve(int(Ntiles.value), int(color_dropdown.value))
+        result, timing = SA.solve(int(Ntiles.value), int(color_dropdown.value), maxrestarts=MRes_value, population_size=Popp_value, generations=Genn_value)
         if isinstance(result, list):
-            
 
-            
+
+
+
             output_container.content = show_table(result)
         else:
             output_text.value = result
@@ -408,16 +272,52 @@ def main(page: ft.Page):
             content=content,
             alignment=ft.alignment.center,
             actions=[
+                ft.ElevatedButton("Show Plot", bgcolor=ft.Colors.BLUE, color=ft.Colors.WHITE, on_click=lambda e: show_plot()),
                 ft.ElevatedButton("Close",bgcolor=ft.Colors.GREEN, color=ft.Colors.WHITE,on_click=lambda e: page.close(compall))
             ],
             actions_alignment=ft.MainAxisAlignment.END,
         )
         page.open(compall)
+    
+    
+    def show_plot():
+        names = []
+        timings = []
+
+        for name, t, timing in page.all_results:
+            names.append(name)
+            timings.append(timing)
+        fig, ax = plt.subplots(figsize=(8, 5))
+
+        ax.bar(names, timings)
+        ax.set_xlabel("Algorithm")
+        ax.set_ylabel("Time Taken (seconds)")
+        ax.set_title("Algorithm Performance Comparison")
+
+        chart = MatplotlibChart(fig, expand=True)
+
+        dialog = ft.AlertDialog(
+            modal=True,
+            title="Performance Plot",
+            content=ft.Container(chart, width=600, height=400),
+            actions=[
+                ft.ElevatedButton(
+                    "Close",
+                    bgcolor=ft.Colors.GREEN,
+                    color=ft.Colors.WHITE,
+                    on_click=lambda e: page.close(dialog)
+                )
+            ],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
+
+        page.open(dialog)
+        
 
 
     def solve_all(n, start):
         page.all_results=[]
-        
+
         for al in range(1,5):
             x=""
             match al:
@@ -425,8 +325,8 @@ def main(page: ft.Page):
                 case 2: x="Best-First Search"
                 case 3: x="Hill-Climbing Search"
                 case 4: x="Cultural Algorithm"
-                
-            result, timing=solve(int(n), al, start)
+
+            result, timing=SA.solve(int(n), al, start, maxrestarts=MRes_value, population_size=Popp_value, generations=Genn_value)
             page.all_results.append((x,result,timing))
 
         open_new(int(n), 1, start)
@@ -534,22 +434,6 @@ def main(page: ft.Page):
 ###############################################################################################################################
 
 ###########################################################--Main--############################################################
-
-def solve(N,C,start= -1):
-    board = Board(N, start)
-    match C:
-        case 1:
-            backtrack(board)
-        case 2:
-            best_first(board)
-        case 3:
-            hill_climbing(board,MRes_value)
-        case 4:
-            cultural(board,Popp_value,Genn_value)
-        case _:
-            return("No Such Search Algorithm"),0
-    # return print_board(board)
-    return board.print_board()
 
 ft.app(main)
 
