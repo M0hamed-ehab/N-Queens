@@ -363,18 +363,18 @@ def main(page: ft.Page):
 
         page.open(dialog)
         
-        def show_Cplot():
+    def show_Cplot():
             
-            fig = plot_cultural_progress(globals.history_best)
-            chart = MatplotlibChart(fig, expand=True)
-            dialog = ft.AlertDialog( modal=True, title="Cultural Algorithm Progress", content=ft.Container(chart, width=600, height=400),
-                    actions=[
+        fig = plot_cultural_progress(globals.history_best)
+        chart = MatplotlibChart(fig, expand=True)
+        dialog = ft.AlertDialog( modal=True, title="Cultural Algorithm Progress", content=ft.Container(chart, width=600, height=400),
+                actions=[
                         ft.ElevatedButton("Close", bgcolor=ft.Colors.GREEN, color=ft.Colors.WHITE, on_click=lambda e: page.close(dialog))
                     ],
                     actions_alignment=ft.MainAxisAlignment.END,
                 )
             
-            page.open(dialog)
+        page.open(dialog)
         
 
 
@@ -474,7 +474,8 @@ def main(page: ft.Page):
                     [
                        ft.Row([Ntiles, all_btn], alignment=ft.MainAxisAlignment.CENTER ),
                         color_dropdown,
-                        submit_btn,
+                        submit_btn,                 ft.ElevatedButton("Show Plot", bgcolor=ft.Colors.BLUE, color=ft.Colors.WHITE, on_click=lambda e: show_Cplot()),
+
                         output_container,
                         output_time
                     ],
