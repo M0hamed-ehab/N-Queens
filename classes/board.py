@@ -1,6 +1,7 @@
 import random
 import time
-
+import GUI
+import globals
 ########################################################--Board Class--########################################################
 class Board:
     def __init__(self, N, start= -1):
@@ -34,9 +35,20 @@ class Board:
             return "No Solution Found",time.time()-self.timing
         return self.board,time.time()-self.timing
 
+
+        
+    def show_board(self):
+        table_container = GUI.show_table(self.board, self.N)
+        if globals.outt is not None:
+            globals.outt.content = table_container
+            globals.pagge.update()
+    
+    
     def place_queen(self, row, col):
         self.board[row][col] = 1
+        self.show_board()
 
     def remove_queen(self, row, col):
         self.board[row][col] = 0
+        self.show_board()
 ###############################################################################################################################

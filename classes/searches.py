@@ -3,6 +3,7 @@ import random
 import time
 from classes.heuristics import Heuristics
 from classes.board import Board
+import globals
 
 class SA:
     @staticmethod
@@ -10,9 +11,10 @@ class SA:
         if col >= board.N:
             return True
 
-        start = board.start[col]
-        for offset in range(board.N):
-            i = (start + offset) % board.N
+        # start = board.start[col]
+        # for offset in range(board.N):
+        for i in range(board.N):
+            # i = (start + offset) % board.N
             if board.is_safe(i, col):
                 board.place_queen(i, col)
 
@@ -84,7 +86,7 @@ class SA:
         return False
 
     @staticmethod
-    def cultural(board, population_size=110, generations=700):
+    def cultural(board, population_size=110, generations=700, refresh_if_stuck=False):
         heuristic = Heuristics.current
         print(f"\nPopulation Size={population_size}\n")
         print(f"\nGenerations={generations}\n")
@@ -94,13 +96,36 @@ class SA:
 
         belief = board.start.copy()
 
+        # Track the best heuristic value and stagnation count
+        best_heuristic = heuristic(board.start, n)
+        stagnation_count = 0
+
+        globals.history_best = []  
+
         for gen in range(generations):
             population.sort(key=lambda s: heuristic(s, n))
             best = population[0]
-            if heuristic(best, n) == 0:
+            current_best_heuristic = heuristic(best, n)
+            globals.history_best.append(current_best_heuristic)  # Track best fitness
+            if current_best_heuristic == 0:
                 for col in range(n):
                     board.place_queen(best[col], col)
                 return True
+
+            # Check for improvement
+            if current_best_heuristic < best_heuristic:
+                best_heuristic = current_best_heuristic
+                stagnation_count = 0
+            else:
+                stagnation_count += 1
+
+            # If refresh_if_stuck is True and stagnation detected, refresh population
+            if refresh_if_stuck and stagnation_count >= 10:
+                population = ([board.start.copy()] + [[random.randint(0, n - 1) for _ in range(n)] for _ in range(population_size - 1)])
+                belief = population[0].copy()  # Reset belief to the new best (initially board.start)
+                stagnation_count = 0
+                best_heuristic = heuristic(population[0], n)
+                continue  # Skip the rest of the generation logic and proceed to the next generation
 
             top_half = population[:population_size // 2]
             for i in range(n):
@@ -115,9 +140,13 @@ class SA:
                 new_pop.append(child)
             population = new_pop
         return False
-
     @staticmethod
-    def solve(N, C, start=-1, maxrestarts=50, population_size=110, generations=700):
+    def solve(N, C, start=-1, maxrestarts=50, population_size=110, generations=700, refresh_if_stuck=False, page=None, container=None):
+        import globals
+        if page is not None:
+            globals.pagge = page
+        if container is not None:
+            globals.outt = container
         board = Board(N, start)
         match C:
             case 1:
@@ -127,7 +156,7 @@ class SA:
             case 3:
                 SA.hill_climbing(board, maxrestarts)
             case 4:
-                SA.cultural(board, population_size, generations)
+                SA.cultural(board, population_size, generations, refresh_if_stuck)
             case _:
                 return ("No Such Search Algorithm"), 0
         return board.print_board()
