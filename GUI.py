@@ -474,7 +474,7 @@ def main(page: ft.Page):
                     [
                        ft.Row([Ntiles, all_btn], alignment=ft.MainAxisAlignment.CENTER ),
                         color_dropdown,
-                        submit_btn,                 ft.ElevatedButton("Show Plot", bgcolor=ft.Colors.BLUE, color=ft.Colors.WHITE, on_click=lambda e: show_Cplot()),
+                        submit_btn,
 
                         output_container,
                         output_time
