@@ -66,8 +66,8 @@ def show_table(result, n, comp=False):
                 cells.append(ft.DataCell(ft.Image(src="icons/blank.png",fit=ft.ImageFit.CONTAIN, width=24,height=24)))
         rows.append(ft.DataRow(cells=cells))
 
-    table = ft.DataTable(columns=columns, rows=rows, border=ft.border.all(3, ft.Colors.WHITE), border_radius=10, heading_row_height=0,
-        vertical_lines=ft.border.BorderSide(3, ft.Colors.WHITE), horizontal_lines=ft.border.BorderSide(3, ft.Colors.WHITE),)
+    table = ft.DataTable(columns=columns, rows=rows, border=ft.border.all(3, ft.Colors.INVERSE_SURFACE), border_radius=10, heading_row_height=0,
+        vertical_lines=ft.border.BorderSide(3, ft.Colors.INVERSE_SURFACE), horizontal_lines=ft.border.BorderSide(3, ft.Colors.INVERSE_SURFACE),)
 
     table_container = ft.Container(
         content=ft.Row(
@@ -111,11 +111,11 @@ def show_green(r, c, result, n):
     table = ft.DataTable(
         columns=columns,
         rows=rows,
-        border=ft.border.all(3, ft.Colors.WHITE),
+        border=ft.border.all(3, ft.Colors.INVERSE_SURFACE),
         border_radius=10,
         heading_row_height=0,
-        vertical_lines=ft.border.BorderSide(3, ft.Colors.WHITE),
-        horizontal_lines=ft.border.BorderSide(3, ft.Colors.WHITE),
+        vertical_lines=ft.border.BorderSide(3, ft.Colors.INVERSE_SURFACE),
+        horizontal_lines=ft.border.BorderSide(3, ft.Colors.INVERSE_SURFACE),
         expand=True
     )
     table_container = ft.Container(
@@ -295,7 +295,7 @@ def main(page: ft.Page):
                     ]
                 )
             )
-        table=ft.DataTable(columns=columns, rows=rows, border=ft.border.all(1, ft.Colors.WHITE), border_radius=10)
+        table=ft.DataTable(columns=columns, rows=rows, border=ft.border.all(1, ft.Colors.INVERSE_SURFACE), border_radius=10)
 
         content=ft.Column(
             [
@@ -362,6 +362,16 @@ def main(page: ft.Page):
         
 
         page.open(dialog)
+        
+        
+    show_cplot_btn = ft.ElevatedButton(
+    text="Show Plot",
+    visible=False,
+    on_click=lambda e: show_Cplot(),
+    bgcolor=ft.Colors.BLUE,
+    color=ft.Colors.WHITE
+    )
+
         
     def show_Cplot():
             
@@ -462,6 +472,8 @@ def main(page: ft.Page):
             ft.dropdown.Option(3,"Hill-Climbing Search"),
             ft.dropdown.Option(4,"Cultural Algorithm"),
         ],
+        
+        on_change= lambda e: (setattr(show_cplot_btn, 'visible', e.control.value=="4"), page.update())
     )
 
     Ntiles = ft.TextField(hint_text="Enter Number of tiles", width=200, text_align=ft.TextAlign.CENTER, keyboard_type=ft.KeyboardType.NUMBER)
@@ -474,7 +486,10 @@ def main(page: ft.Page):
                     [
                        ft.Row([Ntiles, all_btn], alignment=ft.MainAxisAlignment.CENTER ),
                         color_dropdown,
-                        submit_btn,
+                        ft.Row(
+                        [submit_btn, show_cplot_btn],
+                        alignment=ft.MainAxisAlignment.CENTER
+                        ),
 
                         output_container,
                         output_time
