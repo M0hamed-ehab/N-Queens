@@ -7,13 +7,6 @@ from classes.heuristics import Heuristics
 from classes.searches import SA
 
 
-
-
-
-
-
-
-
 ###########################################################--Main--############################################################
 
 ft.app(GUI.main)
