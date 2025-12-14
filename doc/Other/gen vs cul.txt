@@ -1,0 +1,10 @@
+ Feature                        Genetic Algorithm (GA)                                                Cultural Algorithm (CA)                                                                     
+ **Population**                 Maintains a population of candidate solutions                         Maintains a population of candidate solutions                                               
+ **Knowledge/Belief Space**      No explicit shared knowledge; only through selection and crossover   Uses a **belief space** to store patterns from the best individuals                       
+ **Selection**                  Choose parents based on fitness                                       Choose parents based on fitness (top half) and belief influence                              **Crossover (Recombination)**  Combines genes from two parents                                       Uses **belief-guided recombination**: children inherit traits from belief space or randomly 
+ **Mutation**                   Random changes in offspring to maintain diversity                     Random mutation still used, combined with belief guidance                                   
+ **Global Search**              Yes, via population diversity                                         Yes, via population diversity + belief space guidance                                       
+ **Local Search**               Implicit, via selection and crossover                                 Explicit, via belief space improving individuals locally                                    
+ **Convergence Speed**          Can be slow if population is large                                    Often faster because belief space guides the search                                         
+ **Escaping Local Optima**      Only via mutation or diversity                                        Better at escaping due to **belief + population + optional restarts**                       
+ **Complexity**                 Depends on population size, generations, and N                        Slightly higher due to sorting population + belief updates                                  

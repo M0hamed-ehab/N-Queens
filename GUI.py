@@ -15,6 +15,10 @@ def plot_cultural_progress(history_best, title="Cultural Algo Progress"):
     generations = len(history_best)
     gens = list(range(1, generations + 1))
     best = np.array(history_best)
+    
+    min_fit=best.min()
+    max_fit=best.max()
+    best_scaled = (best - min_fit) / (max_fit - min_fit + 1e-8) 
 
     mid = generations // 2
     start_val = best[0]
@@ -26,28 +30,30 @@ def plot_cultural_progress(history_best, title="Cultural Algo Progress"):
 
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    ax.plot(gens, best, linewidth=2)
+    ax.plot(gens, best, linewidth=2,color="green")
 
-    ax.set_xlabel("Time (Number of Generations)")
-    ax.set_ylabel("Best Fitness in Population")
+    ax.set_xlabel(f"Number of Generations ({globals.actual_generations})")
+    ax.set_ylabel("Scaled Fitness (0 to 1)")
     ax.set_title(title)
     ax.grid(alpha=0.3)
 
     ax.axvline(mid, color='gray', linestyle='--', alpha=0.6)
+    ax.set_xticks(range(1, generations + 1, max(1, generations // 10)))
 
     ax.annotate(f"Progress in 1st half = {progress1:.2f}",
-                xy=(mid/2, (start_val + mid_val)/2),
-                xytext=(mid/2, max(best)*0.8),
+                xy=(mid//2, (start_val + mid_val)/2),
+                xytext=(mid//2, max(best)*0.8),
                 arrowprops=dict(arrowstyle="->", color="red"),
                 color="red")
 
     ax.annotate(f"Progress in 2nd half = {progress2:.2f}",
-                xy=(mid + (generations-mid)/2, (mid_val + end_val)/2),
-                xytext=(mid + (generations-mid)/3, max(best)*0.5),
+                xy=(mid + (generations-mid)//2, (mid_val + end_val)/2),
+                xytext=(mid + (generations-mid)//3, max(best)*0.5),
                 arrowprops=dict(arrowstyle="->", color="red"),
                 color="red")
 
     plt.tight_layout()
+    fig.savefig("doc/Diagrams/cultural_progress_plot.png") #to save plot
     return fig
 
 def show_table(result, n, comp=False):
