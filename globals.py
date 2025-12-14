@@ -5,3 +5,4 @@ population_size = 110
 generations = 700
 refresh_if_stuck = False
 history_best = []
+actual_generations = 0

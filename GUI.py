@@ -15,6 +15,10 @@ def plot_cultural_progress(history_best, title="Cultural Algo Progress"):
     generations = len(history_best)
     gens = list(range(1, generations + 1))
     best = np.array(history_best)
+    
+    min_fit=best.min()
+    max_fit=best.max()
+    best_scaled = (best - min_fit) / (max_fit - min_fit + 1e-8) 
 
     mid = generations // 2
     start_val = best[0]
@@ -26,10 +30,10 @@ def plot_cultural_progress(history_best, title="Cultural Algo Progress"):
 
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    ax.plot(gens, best, linewidth=2)
+    ax.plot(gens, best, linewidth=2,color="green")
 
-    ax.set_xlabel("Number of Generations")
-    ax.set_ylabel("Best Fitness in Population")
+    ax.set_xlabel(f"Number of Generations ({globals.actual_generations})")
+    ax.set_ylabel("Scaled Fitness (0 to 1)")
     ax.set_title(title)
     ax.grid(alpha=0.3)
 
