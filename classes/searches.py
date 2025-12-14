@@ -100,9 +100,11 @@ class SA:
         best_heuristic = heuristic(board.start, n)
         stagnation_count = 0
 
-        globals.history_best = []  
+        globals.history_best = []
+        actual_generations = 0
 
         for gen in range(generations):
+            actual_generations += 1
             population.sort(key=lambda s: heuristic(s, n))
             best = population[0]
             current_best_heuristic = heuristic(best, n)
@@ -110,7 +112,7 @@ class SA:
             if current_best_heuristic == 0:
                 for col in range(n):
                     board.place_queen(best[col], col)
-                return True
+                return True, actual_generations
 
             # Check for improvement
             if current_best_heuristic < best_heuristic:
@@ -139,7 +141,7 @@ class SA:
                 child[idx] = belief[idx] if random.random() < 0.5 else random.randint(0, n - 1)
                 new_pop.append(child)
             population = new_pop
-        return False
+        return False, actual_generations
     @staticmethod
     def solve(N, C, start=-1, maxrestarts=50, population_size=110, generations=700, refresh_if_stuck=False, page=None, container=None):
         import globals
